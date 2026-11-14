@@ -1,2 +1,6 @@
+# Runtime dependencies: NONE.
+# Since the macOS fork the patcher is pure stdlib — `packaging` was replaced by
+# patcher/utils/version.py, so `agpatch` runs without venv / pip / PyInstaller.
+#
+# Build-time only (optional, for the upstream single-file PyInstaller builds):
 pyinstaller
-packaging

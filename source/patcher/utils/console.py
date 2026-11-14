@@ -61,6 +61,12 @@ def link(url, text=None, *styles):
 
 
 def clear_screen():
+    # В неинтерактивном режиме вывод не чистим: он должен остаться
+    # в логе терминала / CI.
+    from patcher.utils.session import is_clear_screen
+
+    if not is_clear_screen():
+        return
     os.system("cls" if os.name == "nt" else "clear")
 
 

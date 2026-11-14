@@ -1,0 +1,34 @@
+#!/bin/sh
+# agpatch — launcher (POSIX sh, no bashisms).
+#
+# Works both from the git checkout (./agpatch) and from the installed copy
+# (~/.local/share/agpatch/agpatch), because both keep the same layout:
+#   <root>/agpatch          <- this file
+#   <root>/source/agpatch.py
+#
+# Set AGPATCH_PYTHON=/path/to/python3 to pin an interpreter.
+
+SELF=$0
+while [ -L "$SELF" ]; do
+    LINK=$(readlink "$SELF") || break
+    case $LINK in
+        /*) SELF=$LINK ;;
+        *) SELF=$(dirname "$SELF")/$LINK ;;
+    esac
+done
+DIR=$(cd "$(dirname "$SELF")" && pwd -P) || exit 1
+
+PY=${AGPATCH_PYTHON:-}
+if [ -z "$PY" ]; then
+    if command -v python3 >/dev/null 2>&1; then
+        PY=python3
+    elif [ -x /usr/bin/python3 ]; then
+        PY=/usr/bin/python3
+    else
+        echo "agpatch: python3 not found. Install Xcode Command Line Tools:" >&2
+        echo "  xcode-select --install" >&2
+        exit 127
+    fi
+fi
+
+exec "$PY" "$DIR/source/agpatch.py" "$@"

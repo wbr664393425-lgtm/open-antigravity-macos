@@ -62,6 +62,11 @@ from patcher.vscode.patcher import (
 
 
 def pause(prompt="  Press Enter to return to menu..."):
+    from patcher.utils.session import is_assume_yes
+
+    if is_assume_yes():
+        # Неинтерактивный режим: не ждём Enter.
+        return
     print(color(prompt, COLOR_DIM), end="", flush=True)
     if os.name == "nt":
         import msvcrt
@@ -152,13 +157,29 @@ def prompt_yn(question):
 
 
 def confirmed(question):
-    """Возвращает True, если пользователь ответил 'y'."""
+    """Возвращает True, если пользователь ответил 'y'.
+
+    В неинтерактивном режиме (--yes или запуск без TTY) согласие
+    считается данным заранее: команда уже выразила намерение флагом.
+    """
+    from patcher.utils.session import is_assume_yes
+
+    if is_assume_yes():
+        print(f"  [?] {question} {color('yes (auto)', COLOR_DIM)}")
+        return True
     return prompt_yn(question) in ("y", "yes", "\u0434", "\u0434\u0430")
 
 
 def offer_download_and_block(software_name="Antigravity", target_type=None):
+    from patcher.utils.session import is_assume_yes
+
     err(f"{software_name} path is not set or software is not installed.")
     err("Patching attempt blocked.")
+    if is_assume_yes():
+        hint("Skipping this target (non-interactive mode).")
+        hint(f"Download URL: {color(DOWNLOAD_URL, COLOR_CYAN)}")
+        hint(f"Or pass an explicit path: agpatch patch <target> --path '/Applications/{software_name}.app'")
+        return None
     hint(f"Download URL: {color(DOWNLOAD_URL, COLOR_CYAN)}")
     print()
     print_menu_row("1", "Open download page in browser", DOWNLOAD_URL, COLOR_GREEN)

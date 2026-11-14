@@ -27,6 +27,10 @@
   <a href="https://github.com/AvenCores/open-antigravity-patcher/issues"><img src="https://img.shields.io/github/issues/AvenCores/open-antigravity-patcher?style=for-the-badge" alt="GitHub issues"></a>
 </p>
 
+> 🍎 **macOS quick start (this fork):** no venv, no pip, no PyInstaller —
+> `bash install.sh && agpatch patch`, then `agpatch status` / `agpatch doctor`.
+> Full guide (中文): [README-MACOS.md](./README-MACOS.md).
+
 Опенсорс патчер для Antigravity 2.0, Antigravity IDE, Antigravity CLI и расширения Google Antigravity для VS Code: снимает регионные ограничения без VPN и смены региона аккаунта Google. Опенсурс аналог утилиты [Antigravity IDE в России без VPN и смены региона аккаунта Google](https://github.com/confeden/Antigravity).
 
 ![maxresdefault](https://i.ibb.co/s9Vh80CM/python-w-TPlox-Po-G4.png)

@@ -30,6 +30,12 @@ def confirm_with_captcha(message):
     # Local import avoids a circular dependency: captcha.py is used by
     # patcher modules, while cli.py imports those same modules.
     from patcher.cli import _read_console_line
+    from patcher.utils.session import is_assume_yes
+
+    if is_assume_yes():
+        # Неинтерактивный запуск (-y / нет TTY): явное согласие уже дано флагом.
+        warn("File appears already patched — proceeding because --yes is set.")
+        return True
 
     warn("Warning: this file appears to be already patched.")
     warn("Re-patching is most likely unnecessary and may cause issues.")
