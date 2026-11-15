@@ -1,4 +1,5 @@
 import os
+import sys
 import hashlib
 import time
 import shutil
@@ -256,3 +257,23 @@ def resign_macos_binary(path):
         warn("codesign not found — install Xcode Command Line Tools")
     except subprocess.CalledProcessError as e:
         warn(f"codesign failed: {(e.stderr or '').strip()}")
+
+
+def resign_macos_targets(path):
+    """Переподписывает цель правильно: сначала вложенный бинарь, потом .app.
+
+    Порядок критичен. `codesign --deep` на бандле sealing'ует вложенный
+    language_server в _CodeSignature/CodeResources. Если после этого
+    переподписать бинарь ещё раз, содержимое файла изменится и печать
+    станет невалидной — codesign --verify скажет
+    "a sealed resource is missing or invalid" / "file modified: ...",
+    и Gatekeeper может убить приложение при запуске.
+
+    Поэтому: бинарь (+x ad-hoc) -> затем бандл (--deep, чтобы печать
+    пересчиталась уже по финальным байтам). Для путей вне .app шаг
+    с бандлом — no-op.
+    """
+    if sys.platform != "darwin":
+        return
+    resign_macos_binary(path)
+    resign_macos_bundle(path)

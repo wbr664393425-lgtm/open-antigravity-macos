@@ -166,6 +166,8 @@ agpatch doctor
 | `source/patcher/utils/console.py` | 非交互模式不清屏（输出留在日志里） |
 | `source/patcher/utils/captcha.py` | `-y` 时跳过算术验证码 |
 | `source/patcher/ide/discovery.py`、`manager/patcher.py` | `packaging.version` → 内置 `patcher.utils.version` |
+| `source/patcher/utils/file.py` | **修 bug**：新增 `resign_macos_targets()`，先签内层二进制、再签 `.app`。上游顺序相反（先 `--deep` 签 bundle 再签 `language_server`），会让封条失效，`codesign --verify` 报 `a sealed resource is missing or invalid` / `file modified: .../language_server` |
+| `source/patcher/manager/patcher.py`、`agy/patcher.py` | **修 bug**：`_make_backup()` 在“实时文件已打补丁、备份仍是原始文件”时不再覆盖备份（上游 re-patch 会把干净备份替换成已打补丁的字节，毁掉还原点） |
 
 上游功能一个没删：IDE / Antigravity 2.0 / agy / VS Code 扩展的 patch 与 restore、备份、版本校验、重签名逻辑都保持原样。
 

@@ -27,6 +27,7 @@ from patcher.utils.file import (
     fix_posix_permissions,
     resign_macos_bundle,
     resign_macos_binary,
+    resign_macos_targets,
     ensure_macos_writable,
 )
 from patcher.utils.update import handle_patch_failure
@@ -208,6 +209,11 @@ def _make_backup(path):
     if os.path.exists(bak):
         if filecmp.cmp(path, bak, shallow=False):
             return
+        # Живой файл уже пропатчен, а бэкап — чистый оригинал:
+        # не затираем оригинал пропатченными байтами (re-patch не должен
+        # уничтожать точку восстановления).
+        if is_already_patched(path) and not is_already_patched(bak):
+            return
         info(f"Backup is stale (app updated) — refreshing {os.path.basename(path)}{BAK_EXT}")
     else:
         info(f"Creating backup -> {os.path.basename(path)}{BAK_EXT}")
@@ -383,8 +389,7 @@ def do_patch_manager(path):
         return
 
     hash_after = file_hash(path)
-    resign_macos_bundle(path)
-    resign_macos_binary(path)
+    resign_macos_targets(path)
     print()
     step("Patch manager binary", True, matched_gate.desc)
     print()
@@ -444,8 +449,7 @@ def do_restore_manager(path):
         return
 
     hash_after = file_hash(path)
-    resign_macos_bundle(path)
-    resign_macos_binary(path)
+    resign_macos_targets(path)
     print()
     panel_rows = [("Target", os.path.basename(path))]
     if hash_before and hash_after and hash_before != hash_after:

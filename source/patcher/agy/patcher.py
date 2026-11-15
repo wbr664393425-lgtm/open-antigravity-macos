@@ -25,6 +25,7 @@ from patcher.utils.file import (
     fix_posix_permissions,
     resign_macos_bundle,
     resign_macos_binary,
+    resign_macos_targets,
     ensure_macos_writable,
 )
 from patcher.utils.update import handle_patch_failure
@@ -263,6 +264,10 @@ def _make_backup(path):
     if os.path.exists(bak):
         if filecmp.cmp(path, bak, shallow=False):
             return  # бэкап уже соответствует этому билду
+        # Живой файл уже пропатчен, а бэкап — чистый оригинал:
+        # не затираем оригинал пропатченными байтами.
+        if is_already_patched(path) and not is_already_patched(bak):
+            return
         info(f"Backup is stale (app updated) — refreshing {os.path.basename(path)}{BAK_EXT}")
     else:
         info(f"Creating backup -> {os.path.basename(path)}{BAK_EXT}")
@@ -446,8 +451,7 @@ def do_patch_agy(path):
         return
 
     hash_after = file_hash(path)
-    resign_macos_bundle(path)
-    resign_macos_binary(path)
+    resign_macos_targets(path)
     if os.name == "posix":
         _copy_to_user_bin(path)
     print()
@@ -510,8 +514,7 @@ def do_restore_agy(path):
         return
 
     hash_after = file_hash(path)
-    resign_macos_bundle(path)
-    resign_macos_binary(path)
+    resign_macos_targets(path)
     if os.name == "posix":
         _copy_to_user_bin(path)
     print()
