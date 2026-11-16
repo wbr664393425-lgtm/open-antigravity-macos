@@ -139,6 +139,15 @@ def handle_patch_failure():
     - If using the latest version (or no update available), offers to create an issue on GitHub.
     """
     from patcher.cli import confirmed
+    from patcher.utils.session import is_assume_yes
+
+    # Неинтерактивный режим (-y / нет TTY): никаких сетевых проверок и
+    # предложений открыть браузер — иначе confirmed() автоподтвердит
+    # "создать issue" и откроет вкладку без спроса.
+    if is_assume_yes() or not sys.stdin.isatty():
+        print()
+        hint(f"Issue tracker: {color(ISSUES_URL, COLOR_CYAN)}")
+        return
 
     print()
     info("Checking for patcher updates...")

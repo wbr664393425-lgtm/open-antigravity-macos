@@ -368,6 +368,8 @@ agpatch doctor
 | `quarantine: present` | `xattr -dr com.apple.quarantine <app>` |
 | 目标找不到 | `agpatch doctor --path '/Applications/Antigravity.app'` |
 | `gate signature not found (unsupported version?)` | 版本太新/太旧，签名没覆盖；先 `agpatch check-updates` 看是否有新版 |
+| `Running as root, but the target is still not writable` | 权限已提但被更高层挡住：`ls -lO` 看 `uchg/schg`、`mount` 看是否只读卷、`系统设置 → 隐私与安全性 → 应用管理` 放行你用的终端（**root 也不能绕过 TCC**） |
+| `Backup error: [Errno 1] Operation not permitted` | 同上；也可能是终端本身是被别 App 沙盒化拉起的，换成 `Terminal.app` 直接跑 |
 
 其他常见错误（HTTP 500 / 403 `SUBSCRIPTION_REQUIRED` / 429 配额）**与本地补丁无关**，详见 [UPSTREAM.md](./UPSTREAM.md) 对应章节。
 

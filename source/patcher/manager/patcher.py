@@ -311,10 +311,13 @@ def do_patch_manager(path):
         except (PermissionError, OSError) as e:
             err(f"Backup error: {e}")
             if sys.platform == "darwin":
-                hint("macOS blocked writing inside Antigravity.app (Errno 1 Operation not permitted).")
-                hint("Close Antigravity, then re-run the patcher with sudo:")
-                hint("  sudo python main.py   (or sudo ./Open_AG_Patcher)")
-                hint("If it still fails: ls -lO shows 'uchg' flag -> patcher already tried 'chflags nouchg'.")
+                hint("macOS denied writing inside the .app bundle (Errno 1 Operation not permitted).")
+                hint("Nothing was modified. Check, in order:")
+                hint(f"  1) immutable flags: ls -lO '{path}'  (no uchg/schg in the flags column)")
+                hint("  2) read-only volume: mount | grep -i applications")
+                hint("  3) App Management privacy: System Settings -> Privacy & Security")
+                hint("     -> App Management, allow your terminal (root does NOT bypass TCC)")
+                hint("  4) close the app, then retry: sudo agpatch patch")
             else:
                 hint("No write access — re-run as admin/root and close Antigravity first.")
             handle_patch_failure()

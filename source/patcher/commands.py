@@ -131,7 +131,9 @@ def _elevate(argv):
     entry = _entry_script()
     cmd = ["sudo", "/usr/bin/env", "AGPATCH_ELEVATED=1", sys.executable, entry] + list(argv)
     info("Target is not writable by the current user — requesting administrator rights (sudo)...")
-    print(f"  $ sudo {' '.join(argv)}")
+    # Печатаем полную команду, а не только аргументы: "sudo patch all" выглядел
+    # как вызов несуществующего бинаря.
+    print(f"  $ sudo {sys.executable} {entry} {' '.join(argv)}")
     sys.stdout.flush()
     try:
         os.execvp(cmd[0], cmd)
@@ -139,6 +141,32 @@ def _elevate(argv):
         warn(f"Could not re-launch with sudo: {e}")
         return False
     return False
+
+
+def _abort_if_sandboxed(paths, targets):
+    """Понятная диагностика, когда права уже повышены, а запись всё равно закрыта.
+
+    Обычно это значит, что мешает не POSIX-права, а что-то уровнем выше:
+    read-only том, неизменяемый флаг (uchg/schg) или приватность macOS
+    «Управление приложениями» (TCC App Management), которая блокирует
+    правку чужих .app даже для root.
+    """
+    from patcher.utils.console import err, hint, warn
+
+    warn("Running as root, but the target is still not writable.")
+    err("Refusing to continue — nothing has been modified.")
+    print()
+    hint("Most likely causes, check in this order:")
+    hint(f"  1) immutable flags: ls -lO '{paths[0]}'   (flags column: no uchg / schg)")
+    hint("  2) read-only volume: mount | grep -i applications")
+    hint("  3) App Management privacy: System Settings -> Privacy & Security -> App Management")
+    hint("     Allow the terminal you are using (a terminal embedded in another app")
+    hint("     inherits that app's restrictions, and root does not bypass TCC).")
+    hint("  4) if the app was just updated/installed by another process, wait a second and retry")
+    print()
+    hint("Then retry: sudo agpatch patch " + " ".join(str(t) for t in targets))
+    return 1
+
 
 
 # ─────────────────────────────────────────────────────────────── discovery ──
@@ -401,6 +429,8 @@ def cmd_patch(args):
         return 0
 
     if write_paths and _needs_root(write_paths):
+        if os.environ.get("AGPATCH_ELEVATED") == "1":
+            return _abort_if_sandboxed(write_paths, args.target or ["all"])
         argv = ["patch"] + list(args.target or [])
         if args.yes:
             argv.append("-y")
